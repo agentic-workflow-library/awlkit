@@ -10,6 +10,8 @@ from typing import Dict, Any, Optional, List
 import json
 import logging
 
+from awlkit.execution import LocalRunner, ExecutionResult, ExecutionStatus
+
 logger = logging.getLogger(__name__)
 
 
@@ -21,11 +23,17 @@ class Agent(ABC):
         self.config = config or {}
         self._workflow_cache = {}
         self._setup_logging()
+        self._setup_execution_engine()
     
     def _setup_logging(self):
         """Set up logging configuration."""
         log_level = self.config.get('log_level', 'INFO')
         logging.basicConfig(level=getattr(logging, log_level))
+    
+    def _setup_execution_engine(self):
+        """Set up the execution engine."""
+        execution_config = self.config.get('execution', {})
+        self.execution_engine = LocalRunner(execution_config)
     
     def process_batch(self, batch_config: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -160,7 +168,9 @@ class Agent(ABC):
         base_capabilities = [
             'process_batch',
             'analyze_workflow',
-            'validate_inputs'
+            'validate_inputs',
+            'execute_workflow',
+            'validate_workflow'
         ]
         
         # Add domain-specific capabilities if defined
@@ -179,5 +189,80 @@ class Agent(ABC):
             'name': self.__class__.__name__,
             'module': self.__class__.__module__,
             'capabilities': self.get_capabilities(),
-            'config': self.config
+            'config': self.config,
+            'execution_engine': self.execution_engine.get_engine_info() if self.execution_engine else None
         }
+    
+    def execute_workflow(
+        self,
+        workflow_path: Path,
+        inputs_path: Path,
+        output_dir: Optional[Path] = None,
+        **kwargs
+    ) -> ExecutionResult:
+        """
+        Execute a CWL workflow using the configured execution engine.
+        
+        Args:
+            workflow_path: Path to CWL workflow file
+            inputs_path: Path to inputs YAML/JSON file
+            output_dir: Optional output directory
+            **kwargs: Additional execution options
+            
+        Returns:
+            ExecutionResult with execution status and outputs
+        """
+        if not self.execution_engine or not self.execution_engine.is_available():
+            logger.error("No execution engine available")
+            return ExecutionResult(
+                status=ExecutionStatus.FAILED,
+                errors=["No execution engine available. Install cwltool or configure Seven Bridges."]
+            )
+        
+        # Convert paths to Path objects
+        workflow_path = Path(workflow_path)
+        inputs_path = Path(inputs_path)
+        
+        # Validate workflow exists
+        if not workflow_path.exists():
+            return ExecutionResult(
+                status=ExecutionStatus.FAILED,
+                errors=[f"Workflow file not found: {workflow_path}"]
+            )
+        
+        # Validate inputs exist
+        if not inputs_path.exists():
+            return ExecutionResult(
+                status=ExecutionStatus.FAILED,
+                errors=[f"Inputs file not found: {inputs_path}"]
+            )
+        
+        # Execute workflow
+        logger.info(f"Executing workflow: {workflow_path.name}")
+        return self.execution_engine.execute(
+            workflow_path,
+            inputs_path,
+            output_dir,
+            **kwargs
+        )
+    
+    def validate_workflow(self, workflow_path: Path) -> bool:
+        """
+        Validate a CWL workflow file.
+        
+        Args:
+            workflow_path: Path to CWL workflow file
+            
+        Returns:
+            True if valid, False otherwise
+        """
+        if not self.execution_engine or not self.execution_engine.is_available():
+            logger.error("No execution engine available for validation")
+            return False
+        
+        workflow_path = Path(workflow_path)
+        if not workflow_path.exists():
+            logger.error(f"Workflow file not found: {workflow_path}")
+            return False
+        
+        return self.execution_engine.validate_workflow(workflow_path)
