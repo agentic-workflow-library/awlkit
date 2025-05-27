@@ -25,9 +25,11 @@ class LocalRunner(ExecutionEngine):
     
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         """Initialize with optional preferred engine."""
-        super().__init__(config)
-        self.preferred_engine = self.config.get('preferred_engine', 'auto')
+        # Set preferred_engine before calling super().__init__
+        config = config or {}
+        self.preferred_engine = config.get('preferred_engine', 'auto')
         self._engine = None
+        super().__init__(config)
         self._initialize_engine()
     
     def _validate_config(self):

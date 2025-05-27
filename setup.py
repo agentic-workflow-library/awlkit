@@ -41,6 +41,32 @@ setup(
             "black>=23.0",
             "flake8>=6.0",
             "mypy>=1.0",
+        ],
+        "ollama": [
+            "aiohttp>=3.8",
+            "requests>=2.28",
+        ],
+        "openai": [
+            "openai>=1.0",
+        ],
+        "anthropic": [
+            "anthropic>=0.8",
+        ],
+        "huggingface": [
+            "transformers>=4.35.0",
+            "torch>=2.0.0",
+            "accelerate>=0.24.0",
+            "bitsandbytes>=0.41.0",
+        ],
+        "all": [
+            "aiohttp>=3.8",
+            "requests>=2.28",
+            "openai>=1.0",
+            "anthropic>=0.8",
+            "transformers>=4.35.0",
+            "torch>=2.0.0",
+            "accelerate>=0.24.0",
+            "bitsandbytes>=0.41.0",
         ]
     },
     entry_points={

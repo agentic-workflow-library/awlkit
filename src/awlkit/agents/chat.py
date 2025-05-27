@@ -9,7 +9,7 @@ import logging
 from pathlib import Path
 import json
 
-from awlkit.llm import ConversationMemory, detect_available_provider
+from awlkit.llm import ConversationMemory
 
 logger = logging.getLogger(__name__)
 
@@ -17,16 +17,16 @@ logger = logging.getLogger(__name__)
 class ChatInterface:
     """Generic chat interface for domain agents."""
     
-    def __init__(self, agent, llm_provider=None):
+    def __init__(self, agent, llm_provider):
         """
         Initialize chat interface.
         
         Args:
             agent: Domain agent instance
-            llm_provider: Optional LLM provider instance
+            llm_provider: LLM provider instance (required)
         """
         self.agent = agent
-        self.llm = llm_provider or detect_available_provider()
+        self.llm = llm_provider
         self.handlers: Dict[str, Callable] = {}
         self.memory = ConversationMemory()
         self._register_generic_handlers()
