@@ -1,0 +1,2 @@
+[console_scripts]
+awlkit = awlkit.cli:main
