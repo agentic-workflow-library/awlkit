@@ -1,6 +1,10 @@
-"""Utility functions for AWLKit."""
+"""
+AWLKit Utilities Module
 
-from .graph import WorkflowGraphAnalyzer
-from .validator import WorkflowValidator
+Provides utility functions and classes for workflow analysis and processing.
+"""
 
-__all__ = ["WorkflowGraphAnalyzer", "WorkflowValidator"]
+from .workflow_analyzer import WorkflowAnalyzer
+from .batch_processor import BatchProcessor
+
+__all__ = ["WorkflowAnalyzer", "BatchProcessor"]
