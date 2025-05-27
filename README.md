@@ -1,1 +1,184 @@
-# awlkit
+# AWLKit - Agentic Workflow Library Kit
+
+AWLKit is a Python framework for parsing, converting, and manipulating computational workflow definitions. It serves as the foundation for the Agentic Workflow Library ecosystem, enabling seamless conversion between workflow languages and providing tools for workflow analysis and optimization.
+
+## 🎯 Purpose
+
+AWLKit addresses the challenge of workflow portability in scientific computing. Different platforms use different workflow languages (WDL, CWL, Nextflow, etc.), making it difficult to share and reuse workflows. AWLKit provides:
+
+- **Universal workflow representation** through an Intermediate Representation (IR)
+- **Bi-directional conversion** between workflow languages
+- **Workflow analysis tools** for optimization and validation
+- **Extensible architecture** for adding new languages and features
+
+## 🚀 Key Features
+
+### Workflow Conversion
+- **WDL → CWL**: Convert Workflow Description Language to Common Workflow Language
+- **CWL → WDL** (planned): Reverse conversion for maximum flexibility
+- **Preserves semantics**: Maintains workflow behavior across conversions
+- **Handles complex patterns**: Scatter/gather, conditionals, sub-workflows
+
+### Workflow Analysis
+- **Dependency graphs**: Visualize task dependencies
+- **Parallelization detection**: Identify opportunities for parallel execution
+- **Resource optimization**: Analyze and optimize resource requirements
+- **Validation**: Check for common errors and anti-patterns
+
+### Extensible Design
+- **Modular parsers**: Easy to add new workflow languages
+- **Plugin architecture**: Extend with custom transformations
+- **IR-based approach**: Language-agnostic intermediate representation
+
+## 📦 Installation
+
+```bash
+# From PyPI (coming soon)
+pip install awlkit
+
+# From source
+git clone https://github.com/agentic-workflow-library/awlkit.git
+cd awlkit
+pip install -e .
+
+# With development dependencies
+pip install -e ".[dev]"
+```
+
+## 🔧 Quick Start
+
+### Command Line Interface
+
+```bash
+# Convert a WDL workflow to CWL
+awlkit convert workflow.wdl workflow.cwl
+
+# Analyze workflow structure
+awlkit analyze workflow.wdl
+
+# Convert entire directory
+awlkit convert-dir wdl_workflows/ cwl_output/
+```
+
+### Python API
+
+```python
+from awlkit import WDLToCWLConverter, WDLParser
+from awlkit.utils import WorkflowGraphAnalyzer
+
+# Simple conversion
+converter = WDLToCWLConverter()
+converter.convert_file("workflow.wdl", "workflow.cwl")
+
+# Advanced usage with analysis
+parser = WDLParser()
+workflow = parser.parse_file("complex_workflow.wdl")
+
+# Analyze workflow
+analyzer = WorkflowGraphAnalyzer(workflow)
+stats = analyzer.get_statistics()
+print(f"Max parallelism: {stats['max_parallelism']}")
+print(f"Critical path length: {stats['critical_path_length']}")
+
+# Modify workflow before conversion
+for task in workflow.tasks.values():
+    if task.runtime and task.runtime.memory:
+        # Ensure minimum memory allocation
+        task.runtime.memory = max(parse_memory(task.runtime.memory), "4G")
+
+# Write modified workflow
+from awlkit import CWLWriter
+writer = CWLWriter()
+writer.write_file(workflow, "optimized_workflow.cwl")
+```
+
+## 🏗️ Architecture
+
+AWLKit uses a three-stage architecture:
+
+```
+Input (WDL/CWL) → Parser → Intermediate Representation (IR) → Writer → Output (CWL/WDL)
+                              ↓
+                        Analysis & Transformation
+```
+
+### Core Components
+
+1. **Parsers** (`awlkit.parsers`)
+   - `WDLParser`: Parses WDL files into IR
+   - `CWLParser`: Parses CWL files into IR
+
+2. **Intermediate Representation** (`awlkit.ir`)
+   - `Workflow`: Container for tasks and dependencies
+   - `Task`: Individual computational step
+   - `Input/Output`: Data flow definitions
+   - `Runtime`: Resource requirements
+
+3. **Writers** (`awlkit.writers`)
+   - `CWLWriter`: Generates CWL from IR
+   - `WDLWriter`: Generates WDL from IR
+
+4. **Converters** (`awlkit.converters`)
+   - `WDLToCWLConverter`: High-level conversion API
+
+5. **Utilities** (`awlkit.utils`)
+   - `WorkflowGraphAnalyzer`: Dependency analysis
+   - `WorkflowValidator`: Validation tools
+
+## 🧬 Real-World Usage
+
+AWLKit is actively used in:
+
+- **[sv-agent](https://github.com/agentic-workflow-library/sv-agent)**: Structural variant analysis with GATK-SV
+- **Research pipelines**: Converting institutional workflows for cloud deployment
+- **Platform migration**: Moving workflows between Terra, DNAnexus, and Seven Bridges
+
+## 📚 Documentation
+
+For comprehensive documentation, visit the [AWL Handbook](https://github.com/agentic-workflow-library/awl-handbook):
+
+- [Getting Started Guide](https://github.com/agentic-workflow-library/awl-handbook/tree/main/docs/getting-started)
+- [User Guide](https://github.com/agentic-workflow-library/awl-handbook/tree/main/docs/user-guide)
+- [API Reference](https://github.com/agentic-workflow-library/awl-handbook/tree/main/docs/reference/awlkit-summary.md)
+- [Developer Guide](https://github.com/agentic-workflow-library/awl-handbook/tree/main/docs/developer-guide)
+
+## 🤝 Contributing
+
+We welcome contributions! See our [Contributing Guide](https://github.com/agentic-workflow-library/awl-handbook/tree/main/docs/developer-guide/contributing.md) for details.
+
+### Development Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/agentic-workflow-library/awlkit.git
+cd awlkit
+
+# Install in development mode
+pip install -e ".[dev]"
+
+# Run tests
+pytest
+
+# Format code
+black src/
+
+# Type checking
+mypy src/
+```
+
+## 🗺️ Roadmap
+
+- [ ] CWL → WDL conversion
+- [ ] Nextflow support
+- [ ] Snakemake support  
+- [ ] Workflow optimization engine
+- [ ] Visual workflow designer
+- [ ] Cloud-native execution
+
+## 📄 License
+
+AWLKit is licensed under the MIT License. See [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+AWLKit is part of the Agentic Workflow Library project, building tools to make scientific computing more accessible and reproducible.
