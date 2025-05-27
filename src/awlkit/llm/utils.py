@@ -84,31 +84,40 @@ def suggest_model_for_task(task: str) -> str:
 
 def format_prompt_for_sv_domain(prompt: str, context: Optional[str] = None) -> str:
     """Format prompt with SV-specific context."""
-    # Load system prompt from file
-    system_prompt_path = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)), 
-        "prompts", 
-        "system_prompt.txt"
-    )
+    # First try to load from sv_agent's prompts directory
+    import os
+    possible_paths = [
+        os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 
+                     "sv_agent", "prompts", "system_prompt.txt"),
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), 
+                     "prompts", "system_prompt.txt")
+    ]
     
-    try:
-        with open(system_prompt_path, 'r') as f:
-            system_context = f.read()
-    except FileNotFoundError:
+    system_context = None
+    for path in possible_paths:
+        try:
+            with open(path, 'r') as f:
+                system_context = f.read()
+                break
+        except FileNotFoundError:
+            continue
+    
+    if not system_context:
         # Fallback to basic context
-        system_context = """You are an expert in structural variant (SV) analysis and the GATK-SV pipeline.
-You have deep knowledge of:
+        system_context = """You are an AI assistant with expertise in structural variant (SV) analysis and the GATK-SV pipeline.
+You have general knowledge about genomics, biology, and bioinformatics, plus specialized knowledge of:
 - WDL and CWL workflow languages
 - SV calling algorithms (Manta, MELT, Wham, etc.)
 - Genomic data formats (VCF, BAM, CRAM)
 - Best practices for SV discovery and genotyping
 - GATK-SV module architecture and dependencies
-"""
+
+You can answer both general biology/genomics questions and specific GATK-SV questions."""
     
     if context:
-        full_prompt = f"{system_context}\n\nAdditional Context:\n{context}\n\nUser Question: {prompt}"
+        full_prompt = f"{system_context}\n\nAdditional Context:\n{context}\n\nUser Question: {prompt}\n\nProvide a helpful and informative response:"
     else:
-        full_prompt = f"{system_context}\n\nUser Question: {prompt}"
+        full_prompt = f"{system_context}\n\nUser Question: {prompt}\n\nProvide a helpful and informative response:"
     
     return full_prompt
 

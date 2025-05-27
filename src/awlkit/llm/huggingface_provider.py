@@ -126,7 +126,8 @@ class HuggingFaceProvider(LLMProvider):
             if quantization_config:
                 model_kwargs["quantization_config"] = quantization_config
                 model_kwargs["device_map"] = "auto"
-            else:
+            elif self._device != "cpu":
+                # Only use device_map for GPU devices
                 model_kwargs["device_map"] = self._device
             
             self.model = AutoModelForCausalLM.from_pretrained(
@@ -135,11 +136,19 @@ class HuggingFaceProvider(LLMProvider):
             )
             
             # Create text generation pipeline
+            # Don't specify device if model uses device_map="auto" (quantization or multi-GPU)
+            pipeline_kwargs = {
+                "model": self.model,
+                "tokenizer": self.tokenizer,
+            }
+            # Only set device if we're not using device_map and it's a CPU model
+            device_map_used = model_kwargs.get("device_map", None)
+            if device_map_used is None and self._device == "cpu":
+                pipeline_kwargs["device"] = self._device
+                
             self.pipeline = pipeline(
                 "text-generation",
-                model=self.model,
-                tokenizer=self.tokenizer,
-                device=self._device if not (self.load_in_8bit or self.load_in_4bit) else None
+                **pipeline_kwargs
             )
             
             logger.info(f"Model {self.model_id} loaded successfully")
